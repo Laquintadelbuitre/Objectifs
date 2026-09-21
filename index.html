@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cap sur le Sénégal — Limoges Football</title>
+<meta name="description" content="Suivi visuel de la cagnotte du voyage au Sénégal de l'équipe U13, sous forme de thermomètres qui montent vers leur cible.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     ⚙️  CONFIGURATION
+     ============================================================ */
+  :root{
+    /* identité Limoges Football — navy sobre du dossier de sponsoring */
+    --bg-top:     #0c1322;
+    --bg-bottom:  #182642;
+
+    --ink:        #fff6ec;
+    --ink-soft:   #c9d2e0;
+    --card-bg:    rgba(15, 22, 40, 0.6);
+    --card-bg-solid: #16213b;
+    --card-border:rgba(255, 255, 255, 0.14);
+    --card-shadow: 0 20px 45px -20px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.04) inset;
+
+    --frame-dark: #16213b;
+    --frame-mid:  #24365c;
+    --glass:      rgba(255,255,255,.10);
+
+    --gold:       #fdd116;
+    --senegal-green: #00853f;
+    --senegal-red:   #c81e2c;
+    --ok:         #4cc26a;
+    --warn:       #e8823a;
+    --danger:     #c81e2c;
+    --live-dot:   #4cc26a;
+    --demo-dot:   #fdd116;
+
+    color-scheme: dark;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.05), transparent 60%),
+      linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+    color: var(--ink);
+    font-family: "Inter", system-ui, sans-serif;
+    padding: 28px 18px 52px;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  h1,h2,.display{ font-family:"Fredoka", system-ui, sans-serif; }
+  .num{ font-variant-numeric: tabular-nums; font-family:"Space Mono", ui-monospace, monospace; }
+
+  .wrap{ max-width: 1100px; margin: 0 auto; position:relative; z-index:1; }
+
+  .map-watermark{
+    position:fixed; top:-6vw; right:-8vw; width:min(60vw,620px); z-index:0;
+    pointer-events:none; opacity:.07;
+  }
+  .map-watermark img{ width:100%; display:block; }
+
+  header{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    flex-wrap:wrap; margin-bottom:22px;
+  }
+  .title-row{ display:flex; align-items:center; gap:16px; }
+  .club-logo{ width:56px; height:56px; flex:none; filter: drop-shadow(0 2px 10px rgba(0,0,0,.35)); }
+  header .eyebrow{
+    font-size:12px; text-transform:uppercase; letter-spacing:.16em; color: var(--gold);
+    margin:0 0 6px; font-weight:600;
+  }
+  h1{ font-size: clamp(28px,5vw,42px); margin:0; font-weight:600; text-shadow: 0 4px 24px rgba(255,138,76,.35); display:flex; align-items:center; gap:10px; }
+  h1 .star{ color: var(--gold); font-size:0.55em; }
+  .flag-stripe{ display:inline-flex; height:4px; width:44px; border-radius:99px; overflow:hidden; margin-right:2px; vertical-align:middle; }
+  .flag-stripe span{ flex:1; }
+  .status{
+    display:flex; align-items:center; gap:9px; font-size:13px; color: var(--ink-soft);
+    background: var(--card-bg); border:1px solid var(--card-border); border-radius:999px;
+    padding:8px 16px 8px 12px; backdrop-filter: blur(8px);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; background: var(--demo-dot); flex:none; }
+  .dot.live{ background: var(--live-dot); box-shadow: 0 0 0 4px color-mix(in srgb, var(--live-dot) 25%, transparent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 3px color-mix(in srgb, var(--live-dot) 25%, transparent) } 50%{ box-shadow:0 0 0 7px color-mix(in srgb, var(--live-dot) 10%, transparent) } }
+  .status button{
+    border:none; background:transparent; color: var(--ink-soft); cursor:pointer; font-size:13px;
+    padding:2px 6px; border-radius:6px; font-family:inherit; text-decoration:underline;
+  }
+  .status button:hover{ color: var(--ink); }
+
+  .grid{
+    display:grid; gap:24px;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+
+  .card{
+    position:relative;
+    background: var(--card-bg-solid);
+    border:1px solid var(--card-border); border-radius:22px;
+    padding:22px 22px 20px; box-shadow: var(--card-shadow);
+    display:flex; flex-direction:column; gap:14px;
+    overflow:hidden;
+  }
+  .card::before{
+    content:""; position:absolute; inset:0; z-index:0; opacity:.5;
+    background: radial-gradient(120% 90% at 50% 120%, var(--accent-glow, rgba(255,138,76,.35)), transparent 70%);
+    pointer-events:none;
+  }
+  .card > *{ position:relative; z-index:1; }
+
+  .gauge-stage{
+    position:relative; width:100%; aspect-ratio: 230/296; border-radius:14px; overflow:visible;
+  }
+  .gauge-stage svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .fill-rect{ transition: y 900ms cubic-bezier(.2,.8,.2,1), height 900ms cubic-bezier(.2,.8,.2,1); }
+  .fill-bulb{ transition: fill 300ms ease; }
+
+  .pct-badge{
+    position:absolute; top:2px; right:2px;
+    background: rgba(0,0,0,.35); border:1px solid var(--card-border);
+    border-radius:10px; padding:5px 10px; backdrop-filter: blur(6px);
+    font-size:14px; font-weight:700; font-family:"Space Mono", monospace;
+  }
+  .pct-badge.full{ color: var(--ok); }
+
+  .confetti-bit{
+    position:absolute; border-radius:1px; left:36%; top:3%; opacity:0;
+    background: var(--accent-2, var(--gold));
+  }
+  .celebrating .confetti-bit{
+    width:6px !important; height:6px !important;
+    animation: confetti-fly 1300ms cubic-bezier(.25,.75,.5,1) infinite;
+  }
+  .confetti-bit:nth-child(1){ margin-left:-24px; animation-delay: 0ms;   --dx:-30px; background: var(--accent-2, var(--gold)); }
+  .confetti-bit:nth-child(2){ margin-left:-12px; animation-delay: 150ms; --dx:-14px; background: var(--accent-1, #ff5a1f); }
+  .confetti-bit:nth-child(3){ margin-left:  0px; animation-delay: 300ms; --dx:  2px; background: var(--gold); }
+  .confetti-bit:nth-child(4){ margin-left: 12px; animation-delay: 450ms; --dx: 16px; background: var(--accent-2, var(--gold)); }
+  .confetti-bit:nth-child(5){ margin-left: 24px; animation-delay: 600ms; --dx: 30px; background: var(--accent-1, #ff5a1f); }
+  .confetti-bit:nth-child(6){ margin-left: -6px; animation-delay: 750ms; --dx: -8px; background: var(--gold); }
+  @keyframes confetti-fly{
+    0%{ opacity:0; transform: translate(0,0) rotate(0deg) scale(.5); }
+    10%{ opacity:1; transform: translate(calc(var(--dx,10px) * .2), -10px) rotate(60deg) scale(1); }
+    75%{ opacity:1; }
+    100%{ opacity:0; transform: translate(var(--dx,10px), -84px) rotate(260deg) scale(.7); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .confetti-bit{ animation: none !important; opacity:.6; }
+  }
+
+  .win-banner{
+    display:flex; align-items:center; gap:6px; justify-content:center;
+    font-family:"Fredoka", system-ui, sans-serif; font-weight:600; font-size:14px;
+    color:#1a0f10; background: linear-gradient(135deg, var(--accent-2, var(--gold)), #fff2c8);
+    border-radius:999px; padding:6px 14px; margin:-2px auto 0; width:fit-content;
+    box-shadow: 0 6px 18px -6px var(--accent-glow, rgba(255,209,102,.6));
+    animation: banner-pop 600ms cubic-bezier(.2,.9,.3,1.3);
+  }
+  @keyframes banner-pop{
+    0%{ transform: scale(.7); opacity:0; }
+    60%{ transform: scale(1.08); opacity:1; }
+    100%{ transform: scale(1); }
+  }
+  .card.is-complete{
+    border-color: var(--accent-2, var(--gold));
+    animation: card-glow 2.2s ease-in-out infinite;
+  }
+  @keyframes card-glow{
+    0%,100%{ box-shadow: var(--card-shadow), 0 0 0 0 rgba(0,0,0,0); }
+    50%{ box-shadow: var(--card-shadow), 0 0 28px 2px var(--accent-glow, rgba(255,209,102,.5)); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .win-banner{ animation:none; }
+    .card.is-complete{ animation:none; }
+  }
+
+  .name-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .name{ font-size:20px; margin:0; line-height:1.2; font-weight:600; }
+  .icon-btn{
+    border:none; background:transparent; color: var(--ink-soft); cursor:pointer;
+    font-size:13px; padding:5px 8px; border-radius:8px; font-family:inherit;
+  }
+  .icon-btn:hover{ background: rgba(255,255,255,.08); color: var(--ink); }
+  .icon-btn:focus-visible{ outline:2px solid var(--accent-2, var(--gold)); outline-offset:1px; }
+
+  .amounts{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .amounts .raised{ font-size:24px; font-weight:700; }
+  .amounts .target{ font-size:13px; color: var(--ink-soft); }
+
+  .bar{
+    height:9px; border-radius:99px; background: rgba(255,255,255,.08); overflow:hidden;
+    border:1px solid var(--card-border);
+  }
+  .bar > i{
+    display:block; height:100%; border-radius:inherit;
+    background: linear-gradient(90deg, var(--accent-1, #ff5a1f), var(--accent-2, var(--gold)));
+    transition: width 900ms cubic-bezier(.2,.8,.2,1);
+  }
+
+  .add-row{ display:flex; gap:8px; }
+  .field-error{
+    margin:-6px 0 0; font-size:12.5px; color: var(--danger);
+  }
+  input[type="number"], input[type="text"]{
+    font-family: inherit; font-size:14px; color: var(--ink);
+    background: rgba(255,255,255,.06); border:1px solid var(--card-border);
+    border-radius:10px; padding:10px 11px; width:100%;
+  }
+  input::placeholder{ color: var(--ink-soft); }
+  input:focus-visible{ outline:2px solid var(--accent-2, var(--gold)); outline-offset:1px; }
+  button{
+    font-family:"Inter", sans-serif; font-weight:600; font-size:14px; cursor:pointer;
+    border-radius:10px; border:1px solid transparent; padding:10px 15px;
+  }
+  button:focus-visible{ outline:2px solid var(--accent-2, var(--gold)); outline-offset:2px; }
+  button:disabled{ opacity:.5; cursor:default; }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--accent-1, #ff5a1f), var(--accent-2, var(--gold)));
+    color:#1a0f10; white-space:nowrap; font-weight:700;
+  }
+  .btn-primary:hover{ filter: brightness(1.08); }
+  .btn-ghost{ background: rgba(255,255,255,.06); border-color: var(--card-border); color: var(--ink); }
+  .btn-ghost:hover{ background: rgba(255,255,255,.12); }
+  .btn-danger{ background:transparent; border-color: var(--card-border); color: var(--danger); }
+  .btn-danger.confirm{ background: var(--danger); color:#2b0c0c; border-color: var(--danger); }
+
+  .edit-panel{
+    display:flex; flex-direction:column; gap:9px; padding-top:8px; border-top:1px dashed var(--card-border);
+  }
+  .edit-panel .row{ display:flex; gap:8px; }
+  .edit-panel label{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; color: var(--ink-soft); display:block; margin-bottom:3px; }
+  .edit-actions{ display:flex; justify-content:space-between; gap:8px; margin-top:2px; }
+
+  .new-goal-card{
+    border:2px dashed var(--card-border); background:transparent; box-shadow:none;
+    align-items:center; justify-content:center; text-align:center; min-height:230px; gap:12px;
+  }
+  .new-goal-card::before{ display:none; }
+  .new-goal-card p{ margin:0; color: var(--ink-soft); font-size:14px; max-width:24ch; }
+  .new-goal-form{ display:flex; flex-direction:column; gap:9px; width:100%; }
+
+  .hint{ font-size:12px; color: var(--ink-soft); margin-top:2px; }
+
+  footer{
+    text-align:center; color: var(--ink-soft); font-size:12px; margin-top:36px; opacity:.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="map-watermark" aria-hidden="true"><img src="assets/carte-senegal.png" alt=""></div>
+
+<div class="wrap">
+  <header>
+    <div class="title-row">
+      <img class="club-logo" src="assets/logo-limoges-football.png" alt="Limoges Football">
+      <div>
+        <p class="eyebrow">Séjour football U13 · avril 2027</p>
+        <h1>
+          <span class="flag-stripe"><span style="background:var(--senegal-green)"></span><span style="background:var(--gold)"></span><span style="background:var(--senegal-red)"></span></span>
+          Cap sur le Sénégal <span class="star">★</span>
+        </h1>
+      </div>
+    </div>
+    <div class="status" id="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Connexion…</span>
+      <button id="refreshBtn" type="button" title="Rafraîchir">↻</button>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>Limoges Football U13 · Cap sur le Sénégal 🇸🇳 · propulsé par Google Sheets</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     ⚙️  CONFIGURATION — à personnaliser
+     ============================================================
+     1. Déployez le fichier Code.gs fourni comme application web
+        Google Apps Script (exécuter en tant que moi, accès : tout
+        le monde), puis collez l'URL /exec ci-dessous.
+     2. Laissez vide pour lancer la page en mode démonstration
+        (données locales, non partagées).
+  ============================================================ */
+  var APPS_SCRIPT_URL = ""; // ex: "https://script.google.com/macros/s/XXXXX/exec"
+  var POLL_MS = 15000;      // fréquence de rafraîchissement automatique (ms)
+
+  // Palette de couleurs attribuée à chaque objectif, dans l'ordre —
+  // reprise du dossier de sponsoring officiel (rouge/or/vert du drapeau
+  // sénégalais + navy du Limoges Football).
+  var PALETTE = [
+    { a1:"#00853f", a2:"#8fd19e", glow:"rgba(0,133,63,.4)"   },  // vert Sénégal
+    { a1:"#c81e2c", a2:"#fdd116", glow:"rgba(200,30,44,.4)"  },  // rouge/or Sénégal
+    { a1:"#fdd116", a2:"#fff3b0", glow:"rgba(253,209,22,.4)" },  // or
+    { a1:"#4472c4", a2:"#a9c0ea", glow:"rgba(68,114,196,.4)" },  // bleu Limoges Football
+    { a1:"#c2612f", a2:"#f2b880", glow:"rgba(194,97,47,.4)"  }   // terre cuite savane
+  ];
+
+  var DEMO_GOALS = [
+    { id:"mecenat-senegal", nom:"Séjour U13 au Sénégal — avril 2027", cible:16260, actuel:0 }
+  ];
+
+  /* ============================================================
+     Logique de l'application — pas besoin de modifier au-delà
+     ============================================================ */
+
+  var state = { goals: [], mode: "loading" };
+  var editingId = null;
+  var confirmDeleteId = null;
+  var showNewForm = false;
+  var pollTimer = null;
+
+  var grid = document.getElementById("grid");
+  var statusDot = document.getElementById("statusDot");
+  var statusText = document.getElementById("statusText");
+  var refreshBtn = document.getElementById("refreshBtn");
+
+
+  function euros(n){
+    n = Number(n) || 0;
+    return new Intl.NumberFormat("fr-FR", { style:"currency", currency:"EUR", maximumFractionDigits:0 }).format(n);
+  }
+  function pct(g){
+    var c = Number(g.cible) || 0;
+    var a = Number(g.actuel) || 0;
+    if (c <= 0) return 0;
+    return (a / c) * 100;
+  }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+  function colorFor(idx){ return PALETTE[idx % PALETTE.length]; }
+
+  function setStatus(mode){
+    state.mode = mode;
+    if (mode === "live"){
+      statusDot.className = "dot live";
+      statusText.textContent = "Synchronisé";
+    } else if (mode === "demo"){
+      statusDot.className = "dot";
+      statusText.textContent = "Mode démo";
+    } else if (mode === "error"){
+      statusDot.className = "dot";
+      statusText.textContent = "Connexion impossible";
+    } else {
+      statusDot.className = "dot";
+      statusText.textContent = "Connexion…";
+    }
+  }
+
+  // ---- Thermometer SVG ----
+  function thermometerSVG(g, idx){
+    var p = Math.max(0, pct(g));
+    var shown = Math.min(p, 100);
+    var full = p >= 100;
+    var clipId = "clip-" + idx;
+    var gradId = "grad-" + idx;
+
+    // Géométrie du tube : cx décalé à gauche pour laisser la place aux
+    // paliers gradués à droite. De tubeTop (0%) à bulbTop (100%).
+    var cx = 84, tubeTop = 10, bulbTop = 240, bulbCy = 264, bulbR = 32, tubeHalf = 20;
+    var usable = bulbTop - tubeTop;
+    // Le remplissage est calculé sur toute la hauteur (bulbe + tube), pas
+    // seulement sur le tube : un petit montant ne doit colorer qu'un
+    // mince filet tout en bas du bulbe, pas le bulbe entier.
+    var bulbBottom = bulbCy + bulbR;
+    var totalSpan = bulbBottom - tubeTop;
+    var fillH = (shown / 100) * totalSpan;
+    var fillY = bulbBottom - fillH;
+
+    var paliers = [25, 50, 75, 100].map(function(t){
+      var y = bulbTop - (t / 100) * usable;
+      var reached = shown >= t - 0.01;
+      var amount = euros((Number(g.cible) || 0) * (t / 100));
+      return {
+        y: y,
+        line: '<line x1="' + (cx - tubeHalf) + '" y1="' + y.toFixed(1) + '" x2="' + (cx + tubeHalf) + '" y2="' + y.toFixed(1) + '" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>',
+        tick: '<line x1="' + (cx + tubeHalf + 6) + '" y1="' + y.toFixed(1) + '" x2="' + (cx + tubeHalf + 18) + '" y2="' + y.toFixed(1) + '" stroke="' + (reached ? "var(--ok)" : "var(--ink-soft)") + '" stroke-width="3.5" stroke-linecap="round" opacity="' + (reached ? "0.9" : "0.55") + '"/>',
+        label: '<text x="' + (cx + tubeHalf + 24) + '" y="' + (y + 5).toFixed(1) + '" font-size="14" font-family="Space Mono, ui-monospace, monospace" font-weight="700" fill="' + (reached ? "var(--ok)" : "var(--ink-soft)") + '">' + amount + '</text>'
+      };
+    });
+
+    return (
+      '<div class="gauge-stage' + (full ? ' celebrating' : '') + '">' +
+        '<span class="pct-badge' + (full ? ' full' : '') + '">' + Math.round(p) + '&nbsp;%</span>' +
+        '<svg viewBox="0 0 230 296" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' +
+          '<defs>' +
+            '<linearGradient id="' + gradId + '" gradientUnits="userSpaceOnUse" x1="' + cx + '" y1="' + bulbCy + '" x2="' + cx + '" y2="' + tubeTop + '">' +
+              '<stop offset="0%"   stop-color="#e0393f"/>' +
+              '<stop offset="35%"  stop-color="#f2673b"/>' +
+              '<stop offset="55%"  stop-color="#f6a63c"/>' +
+              '<stop offset="72%"  stop-color="#f0d347"/>' +
+              '<stop offset="88%"  stop-color="#a8d858"/>' +
+              '<stop offset="100%" stop-color="#4cc26a"/>' +
+            '</linearGradient>' +
+            '<clipPath id="' + clipId + '">' +
+              '<rect x="' + (cx - tubeHalf) + '" y="' + tubeTop + '" width="' + (tubeHalf * 2) + '" height="' + (bulbTop - tubeTop) + '" rx="' + tubeHalf + '"/>' +
+              '<circle cx="' + cx + '" cy="' + bulbCy + '" r="' + bulbR + '"/>' +
+            '</clipPath>' +
+          '</defs>' +
+
+          /* verre (tube + bulbe) */
+          '<rect x="' + (cx - tubeHalf) + '" y="' + tubeTop + '" width="' + (tubeHalf * 2) + '" height="' + (bulbTop - tubeTop) + '" rx="' + tubeHalf + '" fill="var(--frame-mid)"/>' +
+          '<circle cx="' + cx + '" cy="' + bulbCy + '" r="' + bulbR + '" fill="var(--frame-mid)"/>' +
+
+          /* remplissage */
+          '<g clip-path="url(#' + clipId + ')">' +
+            (shown > 0 ? '<rect class="fill-rect" x="' + (cx - tubeHalf - bulbR) + '" y="' + fillY.toFixed(1) + '" width="' + (tubeHalf * 2 + bulbR * 2) + '" height="' + (bulbBottom - fillY + 4).toFixed(1) + '" fill="url(#' + gradId + ')"/>' : '') +
+            paliers.map(function(pl){ return pl.line; }).join("") +
+          '</g>' +
+
+          /* reflet en verre */
+          '<rect x="' + (cx - tubeHalf + 4) + '" y="' + (tubeTop + 5) + '" width="5" height="' + (bulbTop - tubeTop - 12) + '" rx="2.5" fill="var(--glass)"/>' +
+
+          /* contour */
+          '<rect x="' + (cx - tubeHalf) + '" y="' + tubeTop + '" width="' + (tubeHalf * 2) + '" height="' + (bulbTop - tubeTop) + '" rx="' + tubeHalf + '" fill="none" stroke="var(--frame-dark)" stroke-width="3"/>' +
+          '<circle cx="' + cx + '" cy="' + bulbCy + '" r="' + bulbR + '" fill="none" stroke="var(--frame-dark)" stroke-width="3"/>' +
+
+          /* paliers gradués */
+          paliers.map(function(pl){ return pl.tick + pl.label; }).join("") +
+        '</svg>' +
+        '<span class="confetti-bit"></span><span class="confetti-bit"></span><span class="confetti-bit"></span>' +
+        '<span class="confetti-bit"></span><span class="confetti-bit"></span><span class="confetti-bit"></span>' +
+      '</div>'
+    );
+  }
+
+  // ---- Card rendering ----
+  function goalCard(g, idx){
+    var p = pct(g);
+    var full = p >= 100;
+    var isEditing = editingId === g.id;
+    var isConfirmingDelete = confirmDeleteId === g.id;
+    var col = colorFor(idx);
+
+    var winBanner = full ? '<div class="win-banner">🎉 Objectif atteint !</div>' : "";
+
+    var head =
+      '<div class="name-row">' +
+        '<h2 class="name">' + esc(g.nom || "Objectif") + '</h2>' +
+        '<button class="icon-btn" data-action="toggle-edit" data-id="' + g.id + '">' + (isEditing ? "Fermer" : "Modifier") + '</button>' +
+      '</div>';
+
+    var amounts =
+      '<div class="amounts">' +
+        '<span class="raised num">' + euros(g.actuel) + '</span>' +
+        '<span class="target">sur <span class="num">' + euros(g.cible) + '</span></span>' +
+      '</div>' +
+      '<div class="bar"><i style="width:' + Math.min(p,100).toFixed(1) + '%"></i></div>';
+
+    var addForm =
+      '<div class="add-row" data-group="add" data-id="' + g.id + '">' +
+        '<input type="number" min="0" step="1" inputmode="decimal" placeholder="Montant reçu (€)" aria-label="Montant à ajouter pour ' + esc(g.nom) + '">' +
+        '<button type="button" class="btn-primary" data-action="add-contribution" data-id="' + g.id + '">Ajouter</button>' +
+      '</div>' +
+      '<p class="field-error" hidden>Indiquez un montant supérieur à 0.</p>';
+
+    var editPanel = "";
+    if (isEditing){
+      editPanel =
+        '<div class="edit-panel">' +
+          '<div class="row">' +
+            '<div style="flex:1"><label>Nom</label><input type="text" data-field="nom" value="' + esc(g.nom) + '"></div>' +
+          '</div>' +
+          '<div class="row">' +
+            '<div style="flex:1"><label>Objectif (€)</label><input type="number" min="0" step="1" data-field="cible" value="' + esc(g.cible) + '"></div>' +
+            '<div style="flex:1"><label>Montant actuel (€)</label><input type="number" min="0" step="1" data-field="actuel" value="' + esc(g.actuel) + '"></div>' +
+          '</div>' +
+          '<div class="edit-actions">' +
+            '<button class="' + (isConfirmingDelete ? 'btn-danger confirm' : 'btn-danger') + '" data-action="delete" data-id="' + g.id + '">' + (isConfirmingDelete ? "Confirmer la suppression" : "Supprimer") + '</button>' +
+            '<button class="btn-primary" data-action="save" data-id="' + g.id + '">Enregistrer</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    var card = document.createElement("div");
+    card.className = "card" + (full ? " is-complete" : "");
+    card.dataset.id = g.id;
+    card.style.setProperty("--accent-1", col.a1);
+    card.style.setProperty("--accent-2", col.a2);
+    card.style.setProperty("--accent-glow", col.glow);
+    card.innerHTML = thermometerSVG(g, idx) + winBanner + head + amounts + addForm + editPanel;
+    return card;
+  }
+
+  function newGoalCard(){
+    var card = document.createElement("div");
+    card.className = "card new-goal-card";
+    if (!showNewForm){
+      card.innerHTML =
+        '<p>Ajouter un autre objectif à suivre au thermomètre.</p>' +
+        '<button class="btn-ghost" data-action="show-new-form">+ Nouvel objectif</button>';
+    } else {
+      card.innerHTML =
+        '<div class="new-goal-form">' +
+          '<div><label class="hint">Nom de l\'objectif</label><input type="text" data-field="new-nom" placeholder="Ex : Cagnotte tournoi"></div>' +
+          '<div><label class="hint">Objectif à atteindre (€)</label><input type="number" data-field="new-cible" min="1" step="1" placeholder="Ex : 5000"></div>' +
+          '<p class="field-error" hidden>Indiquez un nom et un montant supérieur à 0.</p>' +
+          '<div class="edit-actions">' +
+            '<button type="button" class="btn-ghost" data-action="cancel-new-form">Annuler</button>' +
+            '<button type="button" class="btn-primary" data-action="create-goal">Créer</button>' +
+          '</div>' +
+        '</div>';
+    }
+    return card;
+  }
+
+  function render(){
+    grid.innerHTML = "";
+    state.goals.forEach(function(g, idx){
+      grid.appendChild(goalCard(g, idx));
+    });
+    grid.appendChild(newGoalCard());
+  }
+
+  // ---- Backend calls (Google Apps Script) ----
+  function hasBackend(){ return !!APPS_SCRIPT_URL; }
+
+  function apiGet(){
+    return fetch(APPS_SCRIPT_URL, { method: "GET" })
+      .then(function(r){ return r.json(); });
+  }
+  function apiPost(action, payload){
+    var body = Object.assign({ action: action }, payload);
+    // Content-Type volontairement "text/plain" : évite le préflight CORS
+    // (non géré par Apps Script) tout en restant lisible côté script.
+    return fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    }).then(function(r){ return r.json(); });
+  }
+
+  function loadFromBackend(){
+    apiGet().then(function(res){
+      if (!res || !res.ok){ throw new Error("bad response"); }
+      state.goals = (res.objectifs || []).sort(function(a,b){ return (a.createdAt||0) - (b.createdAt||0); });
+      setStatus("live");
+      render();
+    }).catch(function(){
+      setStatus("error");
+    });
+  }
+
+  function startPolling(){
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(loadFromBackend, POLL_MS);
+  }
+
+  function init(){
+    if (!hasBackend()){
+      state.goals = DEMO_GOALS.slice();
+      setStatus("demo");
+      render();
+      return;
+    }
+    loadFromBackend();
+    startPolling();
+  }
+
+  refreshBtn.addEventListener("click", function(){
+    if (hasBackend()) loadFromBackend();
+  });
+
+  // ---- Mutations ----
+  function writeGoal(id, patch){
+    var g = state.goals.find(function(x){ return x.id === id; });
+    if (!g) return;
+    Object.assign(g, patch);
+    render();
+    if (hasBackend()){
+      apiPost("update_goal", Object.assign({ id: id }, patch)).then(function(res){
+        if (!res || !res.ok) loadFromBackend();
+      }).catch(function(){});
+    }
+  }
+
+  function addContribution(id, amount){
+    var g = state.goals.find(function(x){ return x.id === id; });
+    if (!g) return;
+    g.actuel = Math.max(0, (Number(g.actuel) || 0) + amount);
+    render();
+    if (hasBackend()){
+      apiPost("add_contribution", { id: id, montant: amount }).then(function(res){
+        if (res && res.ok && res.objectif){
+          var idx = state.goals.findIndex(function(x){ return x.id === id; });
+          if (idx > -1){ state.goals[idx] = res.objectif; render(); }
+        } else {
+          loadFromBackend();
+        }
+      }).catch(function(){});
+    }
+  }
+
+  function addGoal(nom, cible){
+    if (hasBackend()){
+      apiPost("add_goal", { nom: nom, cible: cible }).then(function(res){
+        loadFromBackend();
+      }).catch(function(){});
+    } else {
+      state.goals.push({ id: "g" + Date.now(), nom: nom, cible: cible, actuel: 0 });
+      render();
+    }
+  }
+
+  function removeGoal(id){
+    state.goals = state.goals.filter(function(x){ return x.id !== id; });
+    render();
+    if (hasBackend()){
+      apiPost("delete_goal", { id: id }).catch(function(){});
+    }
+  }
+
+  // ---- Events ----
+  grid.addEventListener("click", function(e){
+    var btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    var action = btn.dataset.action;
+    var id = btn.dataset.id;
+
+    if (action === "toggle-edit"){
+      editingId = editingId === id ? null : id;
+      confirmDeleteId = null;
+      render();
+    } else if (action === "save"){
+      var card = btn.closest(".card");
+      var nom = card.querySelector('[data-field="nom"]').value.trim() || "Objectif";
+      var cible = Math.max(0, Number(card.querySelector('[data-field="cible"]').value) || 0);
+      var actuel = Math.max(0, Number(card.querySelector('[data-field="actuel"]').value) || 0);
+      writeGoal(id, { nom: nom, cible: cible, actuel: actuel });
+      editingId = null;
+    } else if (action === "delete"){
+      if (confirmDeleteId === id){
+        removeGoal(id);
+        confirmDeleteId = null;
+        editingId = null;
+      } else {
+        confirmDeleteId = id;
+        render();
+      }
+    } else if (action === "show-new-form"){
+      showNewForm = true;
+      render();
+    } else if (action === "cancel-new-form"){
+      showNewForm = false;
+      render();
+    } else if (action === "add-contribution"){
+      submitContribution(btn);
+    } else if (action === "create-goal"){
+      submitNewGoal(btn);
+    }
+  });
+
+  // Entrée dans un champ montant = comme cliquer sur "Ajouter" / "Créer"
+  grid.addEventListener("keydown", function(e){
+    if (e.key !== "Enter") return;
+    var addRow = e.target.closest('[data-group="add"]');
+    if (addRow){
+      e.preventDefault();
+      submitContribution(addRow.querySelector('[data-action="add-contribution"]'));
+      return;
+    }
+    var newForm = e.target.closest(".new-goal-form");
+    if (newForm){
+      e.preventDefault();
+      submitNewGoal(newForm.querySelector('[data-action="create-goal"]'));
+    }
+  });
+
+  function showFieldError(container){
+    var msg = container.querySelector(".field-error");
+    if (msg) msg.hidden = false;
+  }
+
+  function submitContribution(btn){
+    var row = btn.closest('[data-group="add"]');
+    var id = btn.dataset.id;
+    var input = row.querySelector('input[type="number"]');
+    var amount = Number(input.value);
+    if (!amount || amount <= 0){
+      showFieldError(btn.closest(".card"));
+      input.focus();
+      return;
+    }
+    addContribution(id, amount);
+  }
+
+  function submitNewGoal(btn){
+    var card = btn.closest(".card");
+    var nom = card.querySelector('[data-field="new-nom"]').value.trim();
+    var cibleRaw = card.querySelector('[data-field="new-cible"]').value;
+    var cible = Math.max(0, Number(cibleRaw) || 0);
+    if (!nom || cible <= 0){
+      showFieldError(card);
+      return;
+    }
+    showNewForm = false;
+    addGoal(nom, cible);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
